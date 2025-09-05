@@ -95,16 +95,11 @@ const CUSTOMER_SITES = {
         api:'https://hhzyapi.com/api.php/provide/vod',
         name:'火狐资源',
     },
-    wujinziyuan3:{name:"🔵无尽资源资源com",api:"https://api.wujinapi.com/api.php/provide/vod/"},
-    bubugaoziyuan:{name:"🔵步步高资源(json)",api:"https://api.yparse.com/api/json"},
-    CKziyuan:{name:"🔵CK资源",api:"https://ckzy.me/api.php/provide/vod/"},
-    jinyingziyuan:{name:"🔵金鹰资源1",api:"https://jyzyapi.com/api.php/provide/vod/"},
-    jinyingziyuan2:{name:"🔵金鹰资源(jinyingm3u8)",api:"https://jyzyapi.com/provide/vod/from/jinyingm3u8/"},
-    laoyaziyuan:{name:"🔞老鸭资源",api:"https://api.apilyzy.com/api.php/provide/vod/"},
-    yaowuwuziyuan:{name:"🔞155资源",api:"https://155api.com/api.php/provide/vod/"},
-    didiziyuan:{name:"🔞滴滴资源",api:"https://api.ddapi.cc/api.php/provide/vod/"},
-    leboziyuan:{name:"🔞乐播资源",api:"https://lbapi9.com/api.php/provide/vod/"},
-    KKxiezhen:{name:"🔞KK写真",api:"https://kkzy.me/api.php/provide/vod/"},
+    wujinziyuan3:{name:"无尽资源资源",api:"https://api.wujinapi.com/api.php/provide/vod/"},
+    bubugaoziyuan:{name:"步步高资源",api:"https://api.yparse.com/api/json"},
+    CKziyuan:{name:"CK资源",api:"https://ckzy.me/api.php/provide/vod/"},
+    jinyingziyuan:{name:"金鹰资源1",api:"https://jyzyapi.com/api.php/provide/vod/"},
+    jinyingziyuan2:{name:"金鹰资源",api:"https://jyzyapi.com/provide/vod/from/jinyingm3u8/"},
 
 };
 

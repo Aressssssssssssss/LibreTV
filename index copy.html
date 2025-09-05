@@ -261,7 +261,9 @@
       @supports(padding:max(0px)){
         header, .container, .footer{ padding-left:max(1rem, env(safe-area-inset-left)); padding-right:max(1rem, env(safe-area-inset-right)); }
       }
-      #modal:not(.hidden),
+
+      /* 弹窗/遮罩在移除 hidden 时强制显示并居中，且层级高于侧栏和 Loading */
+        #modal:not(.hidden),
         #passwordModal:not(.hidden),
         #disclaimerModal:not(.hidden),
         #loading:not(.hidden) {
@@ -270,9 +272,11 @@
         justify-content: center;
         z-index: 1000; /* 确保压过侧栏(z-40)与其它内容 */
         }
+
+
     </style>
 </head>
-<body class="page-bg text-white h-full">
+<body class="page-bg text-white min-h-screen flex flex-col">
     <!-- 主体开始 -->
     <main class="flex-1 flex flex-col">
     <!-- 左上角：历史 -->
@@ -330,6 +334,8 @@
             <!-- 数据源设置 -->
             <div class="p-3 glass glass--tight neon-border">
                 <label class="block text-sm font-medium text-gray-300 mb-3 border-b border-[#333] pb-1">数据源设置</label>
+                
+
                 <div class="flex space-x-2 mb-3">
                     <button onclick="selectAllAPIs(true)" class="px-2 py-1 bg-[#2a2d39] hover:bg-[#34384a] text-white text-xs rounded">全选</button>
                     <button onclick="selectAllAPIs(false)" class="px-2 py-1 bg-[#2a2d39] hover:bg-[#34384a] text-white text-xs rounded">全不选</button>
@@ -342,6 +348,7 @@
                     <span>已选API数量：<span id="selectedApiCount" class="text-white">0</span></span>
                     <span id="siteStatus" class="ml-2"></span>
                 </div>
+
             </div>
 
             <!-- 自定义API -->
@@ -551,7 +558,7 @@
     </footer>
 
     <!-- 详情模态框 -->
-    <div id="modal" class="fixed inset-0 bg-black/90 hidden items-center justify-center transition-opacity duration-300 z-40">
+    <div id="modal" class="fixed inset-0 bg-black/90 hidden flex items-center justify-center transition-opacity duration-300 z-40">
         <div class="content p-8 w-11/12 max-w-4xl max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-center mb-6 flex-none">
                 <h2 id="modalTitle" class="text-2xl font-bold gradient-text break-words pr-4 max-w-[80%]"></h2>
@@ -564,7 +571,7 @@
     </div>
 
     <!-- 密码验证 -->
-    <div id="passwordModal" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-[65] transition-opacity duration-300">
+    <div id="passwordModal" class="fixed inset-0 bg-black/90 hidden flex items-center justify-center z-[65] transition-opacity duration-300">
         <div class="p-8 w-11/12 max-w-md max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-center mb-6 flex-none">
                 <h2 class="text-2xl font-bold gradient-text">访问验证</h2>
@@ -585,7 +592,7 @@
     </div>
 
     <!-- 免责声明 -->
-    <div id="disclaimerModal" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-[60]">
+    <div id="disclaimerModal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-[60]">
         <div class="p-8 w-11/12 max-w-2xl max-h-[90vh] overflow-y-auto">
             <h2 class="text-2xl font-bold gradient-text mb-6 text-center">使用声明</h2>
             <div class="text-gray-300 space-y-4">

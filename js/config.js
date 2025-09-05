@@ -14,7 +14,7 @@ const PASSWORD_CONFIG = {
 // 网站信息配置
 const SITE_CONFIG = {
     name: 'AresTV',
-    url: 'https://AresTV.is-an.org',
+    url: 'https://tv.uoares.com',
     description: '免费在线视频搜索与观看平台',
     // logo: 'image/logo.png',
     version: '1.0.3'
@@ -26,7 +26,12 @@ const API_SITES = {
         api: 'https://www.example.com/api.php/provide/vod',
         name: '空内容测试源',
         adult: true
-    }
+    },
+    laoyaziyuan:{name:"🔞老鸭资源",adult: true,api:"https://api.apilyzy.com/api.php/provide/vod/"},
+    yaowuwuziyuan:{name:"🔞155资源",adult: true,api:"https://155api.com/api.php/provide/vod/"},
+    didiziyuan:{name:"🔞滴滴资源",adult: true,api:"https://api.ddapi.cc/api.php/provide/vod/"},
+    leboziyuan:{name:"🔞乐播资源",adult: true,api:"https://lbapi9.com/api.php/provide/vod/"},
+    KKxiezhen:{name:"🔞KK写真",adult: true,api:"https://kkzy.me/api.php/provide/vod/"},
     //ARCHIVE https://telegra.ph/APIs-08-12
 };
 

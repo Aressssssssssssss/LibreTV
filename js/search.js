@@ -340,3 +340,24 @@ async function searchByAPIAndKeyWord(apiId, query) {
     return [];
   }
 }
+
+// 兼容层：把 createResultCard 中调用的 openDetailModal(item) 映射到项目中已有的 showDetails(...)
+function openDetailModal(item) {
+  try {
+    if (!item) return;
+    const id = item.norm_id || item.normId || item.id || item.vod_id || item.vodId || '';
+    const title = item.norm_title || item.vod_name || item.title || '';
+    const source = item.source_code || item.source_code || item.source || item.source_name || '';
+    if (typeof showDetails === 'function') {
+      showDetails(id, title, source);
+    } else {
+      console.warn('showDetails 未定义，无法打开详情', item);
+    }
+  } catch (e) {
+    console.error('openDetailModal 错误:', e);
+  }
+}
+// 暴露到全局，防止其他模块直接调用找不到
+window.openDetailModal = openDetailModal;
+
+// ...existing code...
