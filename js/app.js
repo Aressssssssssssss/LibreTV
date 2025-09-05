@@ -609,27 +609,25 @@ async function search() {
     try {
         if (window.ensurePasswordProtection) {
             window.ensurePasswordProtection();
-        } else {
-            // 兼容性检查
-            if (window.isPasswordProtected && window.isPasswordVerified) {
-                if (window.isPasswordProtected() && !window.isPasswordVerified()) {
-                    showPasswordModal && showPasswordModal();
-                    return;
-                }
+        } else if (window.isPasswordProtected && window.isPasswordVerified) {
+            if (window.isPasswordProtected() && !window.isPasswordVerified()) {
+                if (typeof showPasswordModal === 'function') showPasswordModal();
+                return;
             }
         }
     } catch (error) {
-        console.warn('Password protection check failed:', error.message);
+        console.warn('Password protection check failed:', error?.message || error);
         return;
     }
-    const query = document.getElementById('searchInput').value.trim();
+
+    const queryInput = document.getElementById('searchInput');
+    const query = (queryInput?.value || '').trim();
 
     if (!query) {
         showToast('请输入搜索内容', 'info');
         return;
     }
-
-    if (selectedAPIs.length === 0) {
+    if (!Array.isArray(selectedAPIs) || selectedAPIs.length === 0) {
         showToast('请至少选择一个API源', 'warning');
         return;
     }
@@ -640,167 +638,98 @@ async function search() {
         // 保存搜索历史
         saveSearchHistory(query);
 
-        // 从所有选中的API源搜索
-        let allResults = [];
-        const searchPromises = selectedAPIs.map(apiId => 
-            searchByAPIAndKeyWord(apiId, query)
+        // 并行检索所有选中 API
+        const resultsArray = await Promise.all(
+            selectedAPIs.map(apiId => searchByAPIAndKeyWord(apiId, query))
         );
 
-        // 等待所有搜索请求完成
-        const resultsArray = await Promise.all(searchPromises);
-
-        // 合并所有结果
-        resultsArray.forEach(results => {
-            if (Array.isArray(results) && results.length > 0) {
-                allResults = allResults.concat(results);
-            }
+        // 合并结果
+        let allResults = [];
+        resultsArray.forEach(list => {
+            if (Array.isArray(list) && list.length) allResults.push(...list);
         });
 
-        // 对搜索结果进行排序：按名称优先，名称相同时按接口源排序
+        // 黄色内容过滤（可选）
+        const yellowFilterEnabled = localStorage.getItem('yellowFilterEnabled') === 'true';
+        if (yellowFilterEnabled) {
+            const banned = [
+                '伦理片','福利','里番动漫','门事件','萝莉少女','制服诱惑','国产传媒','cosplay','黑丝诱惑',
+                '无码','日本无码','有码','日本有码','SWAG','网红主播','色情片','同性片','福利视频','福利片'
+            ];
+            allResults = allResults.filter(item => {
+                const typeName = String(item.type_name || item.norm_type || item.type || '');
+                return !banned.some(k => typeName.includes(k));
+            });
+        }
+
+        // 排序：标题 > 来源
         allResults.sort((a, b) => {
-            // 首先按照视频名称排序
-            const nameCompare = (a.vod_name || '').localeCompare(b.vod_name || '');
+            const aTitle = (a.norm_title || a.vod_name || '').toString();
+            const bTitle = (b.norm_title || b.vod_name || '').toString();
+            const nameCompare = aTitle.localeCompare(bTitle, 'zh-Hans-CN');
             if (nameCompare !== 0) return nameCompare;
-            
-            // 如果名称相同，则按照来源排序
-            return (a.source_name || '').localeCompare(b.source_name || '');
+            return (a.source_name || '').localeCompare(b.source_name || '', 'zh-Hans-CN');
         });
 
-        // 更新搜索结果计数
-        const searchResultsCount = document.getElementById('searchResultsCount');
-        if (searchResultsCount) {
-            searchResultsCount.textContent = allResults.length;
-        }
+        // 更新结果数量
+        const counter = document.getElementById('searchResultsCount');
+        if (counter) counter.textContent = String(allResults.length);
 
-        // 显示结果区域，调整搜索区域
-        document.getElementById('searchArea').classList.remove('flex-1');
-        document.getElementById('searchArea').classList.add('mb-8');
-        document.getElementById('resultsArea').classList.remove('hidden');
-
-        // 隐藏豆瓣推荐区域（如果存在）
+        // 显示结果区域 / 隐藏豆瓣区域（UI 同步）
+        const searchArea = document.getElementById('searchArea');
+        const resultsArea = document.getElementById('resultsArea');
         const doubanArea = document.getElementById('doubanArea');
-        if (doubanArea) {
-            doubanArea.classList.add('hidden');
+        if (searchArea) {
+            searchArea.classList.remove('flex-1');
+            searchArea.classList.add('mb-8');
         }
+        if (resultsArea) resultsArea.classList.remove('hidden');
+        if (doubanArea) doubanArea.classList.add('hidden');
 
-        const resultsDiv = document.getElementById('results');
-
-        // 如果没有结果
-        if (!allResults || allResults.length === 0) {
-            resultsDiv.innerHTML = `
-                <div class="col-span-full text-center py-16">
-                    <svg class="mx-auto h-12 w-12 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                              d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <h3 class="mt-2 text-lg font-medium text-gray-400">没有找到匹配的结果</h3>
-                    <p class="mt-1 text-sm text-gray-500">请尝试其他关键词或更换数据源</p>
-                </div>
-            `;
+        // 无结果时给出空态
+        if (!allResults.length) {
+            const resultsDiv = document.getElementById('results');
+            if (resultsDiv) {
+                resultsDiv.innerHTML = `
+                    <div class="col-span-full text-center py-16">
+                        <svg class="mx-auto h-12 w-12 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <h3 class="mt-2 text-lg font-medium text-gray-400">没有找到匹配的结果</h3>
+                        <p class="mt-1 text-sm text-gray-500">请尝试其他关键词或更换数据源</p>
+                    </div>
+                `;
+            }
             hideLoading();
             return;
         }
 
-        // 有搜索结果时，才更新URL
+        // 有结果：更新 URL 与标题
         try {
-            // 使用URI编码确保特殊字符能够正确显示
             const encodedQuery = encodeURIComponent(query);
-            // 使用HTML5 History API更新URL，不刷新页面
-            window.history.pushState(
-                { search: query },
-                `搜索: ${query} - AresTV`,
-                `/s=${encodedQuery}`
-            );
-            // 更新页面标题
+            window.history.pushState({ search: query }, `搜索: ${query} - AresTV`, `/s=${encodedQuery}`);
             document.title = `搜索: ${query} - AresTV`;
         } catch (e) {
             console.error('更新浏览器历史失败:', e);
-            // 如果更新URL失败，继续执行搜索
         }
 
-        // 处理搜索结果过滤：如果启用了黄色内容过滤，则过滤掉分类含有敏感内容的项目
-        const yellowFilterEnabled = localStorage.getItem('yellowFilterEnabled') === 'true';
-        if (yellowFilterEnabled) {
-            const banned = ['伦理片', '福利', '里番动漫', '门事件', '萝莉少女', '制服诱惑', '国产传媒', 'cosplay', '黑丝诱惑', '无码', '日本无码', '有码', '日本有码', 'SWAG', '网红主播', '色情片', '同性片', '福利视频', '福利片'];
-            allResults = allResults.filter(item => {
-                const typeName = item.type_name || '';
-                return !banned.some(keyword => typeName.includes(keyword));
-            });
+        // 使用新版高端卡片渲染
+        if (window.AresTVSearchUI && typeof window.AresTVSearchUI.renderSearchResults === 'function') {
+            window.AresTVSearchUI.renderSearchResults(allResults);
+        } else {
+            // 兜底：无新UI时，最简渲染标题列表（不建议长期使用）
+            const resultsDiv = document.getElementById('results');
+            if (resultsDiv) {
+                resultsDiv.innerHTML = allResults.map(it => {
+                    const t = (it.norm_title || it.vod_name || '未命名').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+                    return `<div class="p-3 border border-[#333] rounded">${t}</div>`;
+                }).join('');
+            }
         }
-
-        // 添加XSS保护，使用textContent和属性转义
-        const safeResults = allResults.map(item => {
-            const safeId = item.vod_id ? item.vod_id.toString().replace(/[^\w-]/g, '') : '';
-            const safeName = (item.vod_name || '').toString()
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;');
-            const sourceInfo = item.source_name ?
-                `<span class="bg-[#222] text-xs px-1.5 py-0.5 rounded-full">${item.source_name}</span>` : '';
-            const sourceCode = item.source_code || '';
-
-            // 添加API URL属性，用于详情获取
-            const apiUrlAttr = item.api_url ?
-                `data-api-url="${item.api_url.replace(/"/g, '&quot;')}"` : '';
-
-            // 修改为水平卡片布局，图片在左侧，文本在右侧，并优化样式
-            const hasCover = item.vod_pic && item.vod_pic.startsWith('http');
-
-            return `
-                <div class="card-hover bg-[#111] rounded-lg overflow-hidden cursor-pointer transition-all hover:scale-[1.02] h-full shadow-sm hover:shadow-md" 
-                     onclick="showDetails('${safeId}','${safeName}','${sourceCode}')" ${apiUrlAttr}>
-                    <div class="flex h-full">
-                        ${hasCover ? `
-                        <div class="relative flex-shrink-0 search-card-img-container">
-                            <img src="${item.vod_pic}" alt="${safeName}" 
-                                 class="h-full w-full object-cover transition-transform hover:scale-110" 
-                                 onerror="this.onerror=null; this.src='https://via.placeholder.com/300x450?text=无封面'; this.classList.add('object-contain');" 
-                                 loading="lazy">
-                            <div class="absolute inset-0 bg-gradient-to-r from-black/30 to-transparent"></div>
-                        </div>` : ''}
-                        
-                        <div class="p-2 flex flex-col flex-grow">
-                            <div class="flex-grow">
-                                <h3 class="font-semibold mb-2 break-words line-clamp-2 ${hasCover ? '' : 'text-center'}" title="${safeName}">${safeName}</h3>
-                                
-                                <div class="flex flex-wrap ${hasCover ? '' : 'justify-center'} gap-1 mb-2">
-                                    ${(item.type_name || '').toString().replace(/</g, '&lt;') ?
-                    `<span class="text-xs py-0.5 px-1.5 rounded bg-opacity-20 bg-blue-500 text-blue-300">
-                                          ${(item.type_name || '').toString().replace(/</g, '&lt;')}
-                                      </span>` : ''}
-                                    ${(item.vod_year || '') ?
-                    `<span class="text-xs py-0.5 px-1.5 rounded bg-opacity-20 bg-purple-500 text-purple-300">
-                                          ${item.vod_year}
-                                      </span>` : ''}
-                                </div>
-                                <p class="text-gray-400 line-clamp-2 overflow-hidden ${hasCover ? '' : 'text-center'} mb-2">
-                                    ${(item.vod_remarks || '暂无介绍').toString().replace(/</g, '&lt;')}
-                                </p>
-                            </div>
-                            
-                            <div class="flex justify-between items-center mt-1 pt-1 border-t border-gray-800">
-                                ${sourceInfo ? `<div>${sourceInfo}</div>` : '<div></div>'}
-                                <!-- 接口名称过长会被挤变形
-                                <div>
-                                    <span class="text-gray-500 flex items-center hover:text-blue-400 transition-colors">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                                        </svg>
-                                        播放
-                                    </span>
-                                </div>
-                                -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-
-        resultsDiv.innerHTML = safeResults;
     } catch (error) {
         console.error('搜索错误:', error);
-        if (error.name === 'AbortError') {
+        if (error?.name === 'AbortError') {
             showToast('搜索请求超时，请检查网络连接', 'error');
         } else {
             showToast('搜索请求失败，请稍后重试', 'error');
@@ -809,6 +738,7 @@ async function search() {
         hideLoading();
     }
 }
+
 
 // 切换清空按钮的显示状态
 function toggleClearButton() {

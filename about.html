@@ -1,153 +1,333 @@
+```html
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>关于我们 - AresTV</title>
-	<script src="libs/tailwindcss.min.js"></script>
-	<link rel="stylesheet" href="css/styles.css">
-	<link rel="manifest" href="manifest.json">
-	
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>关于我们 - AresTV</title>
+
+  <!-- 依旧使用 Tailwind 与站点样式（功能不变） -->
+  <script src="libs/tailwindcss.min.js"></script>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="manifest" href="manifest.json" />
+
+  <!-- 仅做视觉升级：不改变任何功能或链接 -->
+  <style>
+    :root{
+      --ares-bg: #0a0b10;
+      --ares-card: rgba(18,18,24,.72);
+      --ares-border: rgba(255,255,255,.12);
+      --ares-ring: linear-gradient(180deg, rgba(255,255,255,.22), rgba(255,255,255,.06));
+      --ares-grad-1: linear-gradient(90deg, #60a5fa, #a78bfa, #f472b6);
+      --ares-grad-2: linear-gradient(90deg, #38bdf8, #22d3ee);
+      --txt-muted: rgba(255,255,255,.72);
+    }
+
+    /* 背景：多层径向 + 轻微网格 */
+    body.page-bg{
+      background:
+        radial-gradient(1200px 800px at -10% -10%, rgba(244,114,182,.09), transparent 60%),
+        radial-gradient(1100px 700px at 110% 10%, rgba(0,204,255,.09), transparent 55%),
+        var(--ares-bg);
+      position: relative;
+      overflow-x: hidden;
+    }
+    body.page-bg::after{
+      content:"";
+      pointer-events:none;
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+      background-size: 26px 26px, 26px 26px;
+      mask-image: radial-gradient(1000px 600px at 50% -10%, #000 30%, transparent 70%);
+    }
+
+    /* 顶部：玻璃栏 + 渐变底线 */
+    header{
+      backdrop-filter: blur(10px) saturate(150%);
+      -webkit-backdrop-filter: blur(10px) saturate(150%);
+      background: linear-gradient(180deg, rgba(16,16,20,.8), rgba(16,16,20,.6));
+      border-bottom: 1px solid var(--ares-border);
+      position: relative;
+      overflow: clip;
+    }
+    header::after{
+      content:"";
+      position:absolute; inset:auto 0 0 0; height:1px;
+      background: var(--ares-grad-1);
+      opacity:.35;
+    }
+    .logo-icon{
+      filter: drop-shadow(0 6px 14px rgba(0,204,255,.28));
+      transition: transform .35s ease;
+    }
+    a:hover .logo-icon{ transform: rotate(-6deg) scale(1.04); }
+
+    /* 主卡片：玻璃拟态 + 渐变描边 */
+    .about-card{
+      background: var(--ares-card);
+      border:1px solid var(--ares-border);
+      border-radius: 18px;
+      box-shadow: 0 18px 40px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.04);
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
+      animation: ares-fade-in .5s ease-out both;
+    }
+    .about-card::before{
+      content:"";
+      position:absolute; inset:0; border-radius:18px; padding:1px;
+      background: var(--ares-ring);
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude;
+      pointer-events:none;
+      z-index:1;
+    }
+    .about-card .inner-glow{
+      position:absolute; inset:-20%; z-index:0; filter: blur(60px);
+      background:
+        radial-gradient(380px 220px at 15% 10%, rgba(96,165,250,.12), transparent 60%),
+        radial-gradient(320px 240px at 85% 15%, rgba(167,139,250,.12), transparent 60%);
+      opacity:.7;
+    }
+    .about-content{ position:relative; z-index:2; }
+
+    /* 标题渐变与分隔线 */
+    .title-grad{
+      background: var(--ares-grad-2);
+      -webkit-background-clip: text; background-clip:text; color: transparent;
+      text-shadow: 0 10px 30px rgba(34,211,238,.12);
+    }
+    .section-sep{
+      width:100%; height:1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.12), transparent);
+    }
+
+    /* 信息卡片 */
+    .info-card{
+      background: rgba(26,26,32,.9);
+      border:1px solid var(--ares-border);
+      border-radius: 14px;
+      transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+      box-shadow: 0 10px 26px rgba(0,0,0,.36), inset 0 1px 0 rgba(255,255,255,.03);
+      position: relative; overflow: hidden;
+    }
+    .info-card:hover{
+      transform: translateY(-2px);
+      border-color: rgba(255,255,255,.18);
+      box-shadow: 0 16px 36px rgba(0,0,0,.5);
+    }
+
+    /* 徽标圆点 */
+    .dot{ width:10px; height:10px; border-radius:999px; margin-right:.65rem; }
+
+    /* 次要文字 */
+    .muted{ color: var(--txt-muted); }
+
+    /* 按钮强化（保持原 ID/链接与行为） */
+    .btn-soft{
+      background: rgba(34,34,40,.9);
+      border:1px solid var(--ares-border);
+      border-radius: 12px;
+      transition: transform .2s ease, box-shadow .2s ease, background .2s ease, border-color .2s ease;
+      box-shadow: 0 6px 18px rgba(0,0,0,.35);
+    }
+    .btn-soft:hover{
+      background:#2a2a33;
+      border-color:#fff;
+      transform: translateY(-1px);
+      box-shadow: 0 10px 26px rgba(0,0,0,.45);
+    }
+
+    /* 页脚顶线渐变 */
+    footer{
+      border-top:1px solid var(--ares-border);
+      background: linear-gradient(180deg, rgba(10,10,12,.85), rgba(10,10,12,.7));
+      position: relative;
+    }
+    footer::before{
+      content:"";
+      position:absolute; inset:0 0 auto 0; height:1px;
+      background: var(--ares-grad-1);
+      opacity:.25;
+    }
+
+    /* 入场动画 */
+    @keyframes ares-fade-in{
+      from{opacity:0; transform: translateY(8px);}
+      to{opacity:1; transform: translateY(0);}
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      *{ animation: none !important; transition: none !important; }
+    }
+  </style>
 </head>
 <body class="page-bg text-white flex flex-col min-h-screen">
-	<header class="border-b border-[#333] bg-[#0a0a0a] p-4">
-        <div class="container mx-auto flex items-center">
-            <div class="flex items-center">
-                <a href="/" class="flex items-center">
-                    <svg class="w-8 h-8 mr-2 text-[#00ccff]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                    </svg>
-                    <h1 class="text-xl font-bold gradient-text">AresTV</h1>
-                </a>
-            </div>
-            <div class="flex-1 text-center">
-                <h2 class="text-xl font-semibold">关于AresTV</h2>
-            </div>
-            <div class="flex items-center">
-                <a href="/" class="px-4 py-2 bg-[#222] hover:bg-[#333] border border-[#333] rounded-lg transition-colors flex items-center">
-                    <svg class="w-5 h-5 mr-1" viewBox="0 0 24 24" fill="#ffffff" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    回到首页
-                </a>
-            </div>
-        </div>
-    </header>	<main class="flex-grow container mx-auto px-4 sm:px-6 py-8 sm:py-16">
-		<div class="max-w-5xl mx-auto">
-			<!-- 主要内容区域 -->
-			<div class="bg-gradient-to-br from-[#111] to-[#0a0a0a] border border-[#333] rounded-xl sm:rounded-2xl p-4 sm:p-8 lg:p-12 shadow-2xl">
-				<!-- 项目介绍 -->				
-				 <div class="text-center mb-8 sm:mb-16">
-					
-					<p class="text-gray-300 text-lg sm:text-xl mb-6 sm:mb-8 leading-relaxed max-w-3xl mx-auto px-2">
-						AresTV 是一个免费的在线视频搜索平台，提供视频搜索和播放服务，不提供任何视频托管服务。
-					</p>
-				</div>				<!-- 分割线 -->
-				<div class="w-full h-px bg-gradient-to-r from-transparent via-[#333] to-transparent mb-8 sm:mb-16"></div>
+  <!-- 顶部 -->
+  <header class="p-4">
+    <div class="container mx-auto flex items-center">
+      <div class="flex items-center">
+        <a href="/" class="flex items-center">
+          <svg class="w-8 h-8 mr-2 text-[#00ccff] logo-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+          </svg>
+          <h1 class="text-xl font-bold gradient-text">AresTV</h1>
+        </a>
+      </div>
+      <div class="flex-1 text-center">
+        <h2 class="text-xl font-semibold title-grad">关于 AresTV</h2>
+      </div>
+      <div class="flex items-center">
+        <a href="/" class="px-4 py-2 btn-soft transition-colors flex items-center">
+          <svg class="w-5 h-5 mr-1" viewBox="0 0 24 24" fill="#ffffff" xmlns="http://www.w3.org/2000/svg">
+            <path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          回到首页
+        </a>
+      </div>
+    </div>
+  </header>
 
-				<!-- 隐私政策 -->
-				<div class="mb-8 sm:mb-16">
-					<h2 class="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">隐私政策</h2>
-					<div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8">
-						<div class="bg-[#1a1a1a] border border-[#333] rounded-xl p-4 sm:p-8">
-							<div class="flex items-center mb-3 sm:mb-4">
-								<div class="w-3 h-3 bg-green-400 rounded-full mr-3"></div>
-								<h3 class="text-lg sm:text-xl font-semibold text-gray-200">数据保护</h3>
-							</div>
-							<p class="text-gray-300 text-base sm:text-lg leading-relaxed">
-								我们尊重并保护您的隐私。AresTV 不收集任何个人数据，且不会限制访问或使用本网站。
-							</p>
-						</div>
-						<div class="bg-[#1a1a1a] border border-[#333] rounded-xl p-4 sm:p-8">
-							<div class="flex items-center mb-3 sm:mb-4">
-								<div class="w-3 h-3 bg-blue-400 rounded-full mr-3"></div>
-								<h3 class="text-lg sm:text-xl font-semibold text-gray-200">服务说明</h3>
-							</div>
-							<p class="text-gray-300 text-base sm:text-lg leading-relaxed">
-								本平台仅用于提供在线视频搜索与播放服务。所有数据均由第三方接口提供，我们不会存储或追踪用户信息。
-							</p>
-						</div>
-					</div>
-				</div>
+  <!-- 主体 -->
+  <main class="flex-grow container mx-auto px-4 sm:px-6 py-8 sm:py-16">
+    <div class="max-w-5xl mx-auto relative">
+      <div class="about-card p-4 sm:p-8 lg:p-12 shadow-2xl">
+        <div class="inner-glow" aria-hidden="true"></div>
+        <div class="about-content">
+          <!-- 介绍 -->
+          <div class="text-center mb-8 sm:mb-16">
+            <p class="muted text-lg sm:text-xl leading-relaxed max-w-3xl mx-auto px-2">
+              AresTV 是一个免费的在线视频搜索平台，提供视频搜索和播放服务，不提供任何视频托管服务。
+            </p>
+          </div>
 
-				<!-- 分割线 -->
-				<div class="w-full h-px bg-gradient-to-r from-transparent via-[#333] to-transparent mb-8 sm:mb-16"></div>				<!-- 版权声明与投诉机制 -->
-				<div>
-					<h2 class="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">版权声明与投诉机制</h2>
-					<div class="space-y-6 sm:space-y-8">
-						<div class="bg-[#1a1a1a] border border-[#333] rounded-xl p-4 sm:p-8">
-							<div class="flex items-start">
-								<div class="flex-shrink-0 w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center mr-3 sm:mr-4 mt-1">
-									<svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-									</svg>
-								</div>
-								<div>
-									<h3 class="text-lg sm:text-xl font-semibold text-gray-200 mb-3 sm:mb-4">免责声明</h3>
-									<p class="text-gray-300 text-base sm:text-lg leading-relaxed">
-										AresTV 仅提供视频搜索服务，不直接提供、存储或上传任何视频内容。所有搜索结果均来自第三方公开接口。用户在使用本站服务时，须遵守相关法律法规，不得利用搜索结果从事侵权行为，如下载、传播未经授权的作品等。
-									</p>
-								</div>
-							</div>
-						</div>
-						
-						<div class="bg-[#1a1a1a] border border-[#333] rounded-xl p-4 sm:p-8">
-							<div class="flex items-start">
-								<div class="flex-shrink-0 w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center mr-3 sm:mr-4 mt-1">
-									<svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 7.89a2 2 0 002.83 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-									</svg>
-								</div>
-								<div class="flex-1">
-									<h3 class="text-lg sm:text-xl font-semibold text-gray-200 mb-3 sm:mb-4">投诉反馈</h3>
-									<p class="text-gray-300 text-base sm:text-lg mb-4 sm:mb-6 leading-relaxed">
-										若您是版权方或相关权利人，发现本站搜索结果中存在侵犯您合法权益的内容，请通过以下渠道向我们反馈：
-									</p>
-									<div class="bg-gradient-to-r from-[#222] to-[#333] border border-[#444] rounded-lg p-4 sm:p-6 mb-4 sm:mb-6">
-										<div class="flex items-center flex-wrap">
-											<svg class="w-5 h-5 sm:w-6 sm:h-6 text-blue-400 mr-2 sm:mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 7.89a2 2 0 002.83 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-											</svg>
-											<span class="text-gray-300 text-base sm:text-lg font-medium mr-2 sm:mr-3">投诉邮箱：</span>
-											<a href="mailto:troll@pissmail.com" class="text-blue-400 hover:text-blue-300 transition-colors text-base sm:text-lg font-medium break-all">troll@pissmail.com</a>
-										</div>
-									</div>
-									<p class="text-gray-300 text-base sm:text-lg leading-relaxed">
-										请在投诉邮件中提供：您的身份证明、权利证明、侵权内容的具体链接及相关说明。我们将在收到投诉后尽快处理，对于确认侵权的内容，将立即断开相关链接，停止展示侵权内容，并将处理结果反馈给您。
-									</p>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</main>
-	<footer class="footer py-6 border-t border-[#333] bg-[#0a0a0a]">
-        <div class="container mx-auto px-4">
-            <div class="flex flex-col md:flex-row justify-between items-center">
-                <div class="mb-4 md:mb-0">
-                    <div class="flex items-center justify-center md:justify-start">
-                        <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                        </svg>
-                        <span class="gradient-text font-bold">AresTV</span>
-                    </div>
-                    <p class="text-gray-500 text-sm mt-2 text-center md:text-left">© 2025 AresTV - 自由观影，畅享精彩</p>
+          <!-- 分割线 -->
+          <div class="section-sep mb-8 sm:mb-16"></div>
+
+          <!-- 隐私政策 -->
+          <section class="mb-8 sm:mb-16">
+            <h2 class="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center title-grad">隐私政策</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8">
+              <div class="info-card p-4 sm:p-8">
+                <div class="flex items-center mb-3 sm:mb-4">
+                  <span class="dot bg-green-400"></span>
+                  <h3 class="text-lg sm:text-xl font-semibold text-gray-100">数据保护</h3>
                 </div>
-                
-                <div class="text-center md:text-right">
-                    <p class="text-gray-500 text-sm max-w-md">
-                        免责声明：本站仅为视频搜索工具，不存储、上传或分发任何视频内容。
-                        所有视频均来自第三方API接口。如有侵权，请联系相关内容提供方。
+                <p class="muted text-base sm:text-lg leading-relaxed">
+                  我们尊重并保护您的隐私。AresTV 不收集任何个人数据，且不会限制访问或使用本网站。
+                </p>
+              </div>
+              <div class="info-card p-4 sm:p-8">
+                <div class="flex items-center mb-3 sm:mb-4">
+                  <span class="dot bg-blue-400"></span>
+                  <h3 class="text-lg sm:text-xl font-semibold text-gray-100">服务说明</h3>
+                </div>
+                <p class="muted text-base sm:text-lg leading-relaxed">
+                  本平台仅用于提供在线视频搜索与播放服务。所有数据均由第三方接口提供，我们不会存储或追踪用户信息。
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <!-- 分割线 -->
+          <div class="section-sep mb-8 sm:mb-16"></div>
+
+          <!-- 版权声明与投诉机制 -->
+          <section>
+            <h2 class="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center title-grad">版权声明与投诉机制</h2>
+            <div class="space-y-6 sm:space-y-8">
+              <div class="info-card p-4 sm:p-8">
+                <div class="flex items-start">
+                  <div class="flex-shrink-0 w-9 h-9 bg-yellow-500 rounded-lg flex items-center justify-center mr-3 sm:mr-4 mt-1 shadow-md">
+                    <svg class="w-4.5 h-4.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 class="text-lg sm:text-xl font-semibold text-gray-100 mb-3 sm:mb-4">免责声明</h3>
+                    <p class="muted text-base sm:text-lg leading-relaxed">
+                      AresTV 仅提供视频搜索服务，不直接提供、存储或上传任何视频内容。所有搜索结果均来自第三方公开接口。用户在使用本站服务时，须遵守相关法律法规，不得利用搜索结果从事侵权行为，如下载、传播未经授权的作品等。
                     </p>
-                    <div class="mt-2 flex justify-center md:justify-end space-x-4">
-                        <a href="/" class="text-gray-400 hover:text-white text-sm transition-colors">首页</a>
-                        <a href="about.html" class="text-gray-400 hover:text-white text-sm transition-colors">关于我们</a>
-                    </div>
+                  </div>
                 </div>
+              </div>
+
+              <div class="info-card p-4 sm:p-8">
+                <div class="flex items-start">
+                  <div class="flex-shrink-0 w-9 h-9 bg-red-500 rounded-lg flex items-center justify-center mr-3 sm:mr-4 mt-1 shadow-md">
+                    <svg class="w-4.5 h-4.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 8l7.89 7.89a2 2 0 002.83 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2z"/>
+                    </svg>
+                  </div>
+                  <div class="flex-1">
+                    <h3 class="text-lg sm:text-xl font-semibold text-gray-100 mb-3 sm:mb-4">投诉反馈</h3>
+                    <p class="muted text-base sm:text-lg mb-4 sm:mb-6 leading-relaxed">
+                      若您是版权方或相关权利人，发现本站搜索结果中存在侵犯您合法权益的内容，请通过以下渠道向我们反馈：
+                    </p>
+                    <div class="rounded-lg p-4 sm:p-6 mb-4 sm:mb-6"
+                         style="background: linear-gradient(90deg, rgba(34,34,40,.9), rgba(42,42,52,.9)); border:1px solid var(--ares-border);">
+                      <div class="flex items-center flex-wrap">
+                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-blue-400 mr-2 sm:mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 8l7.89 7.89a2 2 0 002.83 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2z"/>
+                        </svg>
+                        <span class="muted text-base sm:text-lg font-medium mr-2 sm:mr-3">投诉邮箱：</span>
+                        <a href="mailto:troll@pissmail.com"
+                           class="text-blue-400 hover:text-blue-300 transition-colors text-base sm:text-lg font-medium break-all">
+                          troll@pissmail.com
+                        </a>
+                      </div>
+                    </div>
+                    <p class="muted text-base sm:text-lg leading-relaxed">
+                      请在投诉邮件中提供：您的身份证明、权利证明、侵权内容的具体链接及相关说明。我们将在收到投诉后尽快处理，对于确认侵权的内容，将立即断开相关链接，停止展示侵权内容，并将处理结果反馈给您。
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
+          </section>
+
         </div>
-    </footer>
+      </div>
+    </div>
+  </main>
+
+  <!-- 页脚 -->
+  <footer class="footer py-6">
+    <div class="container mx-auto px-4">
+      <div class="flex flex-col md:flex-row justify-between items-center">
+        <div class="mb-4 md:mb-0">
+          <div class="flex items-center justify-center md:justify-start">
+            <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+            </svg>
+            <span class="gradient-text font-bold">AresTV</span>
+          </div>
+          <p class="text-gray-500 text-sm mt-2 text-center md:text-left">
+            © 2025 AresTV - 自由观影，畅享精彩
+          </p>
+        </div>
+
+        <div class="text-center md:text-right">
+          <p class="text-gray-500 text-sm max-w-md">
+            免责声明：本站仅为视频搜索工具，不存储、上传或分发任何视频内容。
+            所有视频均来自第三方API接口。如有侵权，请联系相关内容提供方。
+          </p>
+          <div class="mt-2 flex justify-center md:justify-end space-x-4">
+            <a href="/" class="text-gray-400 hover:text-white text-sm transition-colors">首页</a>
+            <a href="about.html" class="text-gray-400 hover:text-white text-sm transition-colors">关于我们</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
 </body>
 </html>
+```
