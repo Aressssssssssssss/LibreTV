@@ -47,10 +47,10 @@ const CUSTOMER_SITES = {
         api:'https://lovedan.net/api.php/provide/vod',
         name:'艾丹资源'
     },
-    yaolingbalingziyuan:{
-        api:'https://api.1080zyku.com/inc/api_mac10.php',
-        name:'1080资源'
-    },
+    // yaolingbalingziyuan:{
+    //     api:'https://api.1080zyku.com/inc/api_mac10.php',
+    //     name:'1080资源'
+    // },
     suoniziyuan:{
         api:'https://suoniapi.com/api.php/provide/vod',
         name:'索尼资源',
@@ -99,7 +99,7 @@ const CUSTOMER_SITES = {
         api:'https://hhzyapi.com/api.php/provide/vod',
         name:'火狐资源',
     },
-    huyaziyuan:{name:"🔵虎牙资源",api:"https://www.huyaapi.com/api.php/provide/vod/"},
+    // huyaziyuan:{name:"🔵虎牙资源",api:"https://www.huyaapi.com/api.php/provide/vod/"},
     wujinziyuan3:{name:"🔵无尽资源资源com",api:"https://api.wujinapi.com/api.php/provide/vod/"},
     bubugaoziyuan:{name:"🔵步步高资源(json)",api:"https://api.yparse.com/api/json"},
     CKziyuan:{name:"🔵CK资源",api:"https://ckzy.me/api.php/provide/vod/"},
