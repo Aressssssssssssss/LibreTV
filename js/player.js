@@ -243,7 +243,7 @@ function initializePageContent() {
     }
 
     // 渲染源信息
-    renderResourceInfoBar();
+    // renderResourceInfoBar();
 
     // 更新集数信息
     updateEpisodeInfo();
