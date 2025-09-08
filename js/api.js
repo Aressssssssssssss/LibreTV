@@ -11,13 +11,23 @@ function _normalizeTitleForDedup(name = '') {
 
 // 从若干常见字段里尽力提取年份（19xx/20xx）
 function _extractYearForDedup(item = {}) {
-    const pool = [
-        item.vod_year, item.year, item.publish_year, item.release_year,
-        item.vod_remarks, item.remarks, item.vod_name, item.norm_title, item.title
-    ].filter(Boolean).map(String).join(' ');
-    const m = pool.match(/(?:19|20)\d{2}/);
-    return m ? m[0] : ''; // 没抓到就留空
+  const pool = [item.vod_year, item.year, item.publish_year, item.release_year]
+    .filter(Boolean).map(String).join(' ');
+  const m = pool.match(/(?:19|20)\d{2}/);
+  return m ? m[0] : '';
 }
+
+function dedupePreferYear(list){
+  const seen = new Map();
+  for (const it of list) {
+    const title = _normalizeTitleForDedup(it.norm_title || it.vod_name || it.title || '');
+    const y = _extractYearForDedup(it);
+    const key = y ? `${title}_${y}` : `${title}_`;
+    if (!seen.has(key)) seen.set(key, it);
+  }
+  return [...seen.values()];
+}
+
 
 // 生成“名称+年份”的唯一 key
 function _nameYearKey(item = {}) {
@@ -506,6 +516,8 @@ async function handleAggregatedSearch(searchQuery) {
             }
         });
 
+
+
         // 如果没有搜索结果，返回空结果
         if (allResults.length === 0) {
             return JSON.stringify({
@@ -514,6 +526,8 @@ async function handleAggregatedSearch(searchQuery) {
                 msg: '所有源均无搜索结果'
             });
         }
+
+        allResults = dedupePreferYear(allResults);
 
         // 去重（根据vod_id和source_code组合）
         // const uniqueResults = [];
