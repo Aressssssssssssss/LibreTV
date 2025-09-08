@@ -49,12 +49,12 @@ function normalizeVodItem(raw = {}) {
 }
 
 /* ===================== 图片懒加载（IntersectionObserver） ===================== */
-const _AresTV_LazyPool = [];
-let _AresTV_IO = null;
+const _Eyos_LazyPool = [];
+let _Eyos_IO = null;
 function ensureLazyObserver() {
-  if (_AresTV_IO) return _AresTV_IO;
+  if (_Eyos_IO) return _Eyos_IO;
   if (!("IntersectionObserver" in window)) return null;
-  _AresTV_IO = new IntersectionObserver((entries) => {
+  _Eyos_IO = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
       if (entry.isIntersecting) {
         const img = entry.target;
@@ -63,11 +63,11 @@ function ensureLazyObserver() {
           img.src = dataSrc;
           img.removeAttribute("data-src");
         }
-        _AresTV_IO.unobserve(img);
+        _Eyos_IO.unobserve(img);
       }
     });
   }, { rootMargin: "200px" });
-  return _AresTV_IO;
+  return _Eyos_IO;
 }
 
 function lazyLoad(img) {
@@ -212,7 +212,7 @@ function renderSearchResults(results = []) {
 }
 
 /* ===================== 对外暴露（可从其它模块复用） ===================== */
-window.AresTVSearchUI = Object.assign(window.AresTVSearchUI || {}, {
+window.EyosSearchUI = Object.assign(window.EyosSearchUI || {}, {
   renderSearchResults,
   createResultCard,
   normalizeVodItem,

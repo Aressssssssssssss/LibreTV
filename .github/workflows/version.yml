@@ -8,7 +8,7 @@ on:
 
 jobs:
   bump-version:
-    if: github.repository == 'LibreSpark/AresTV'
+    if: github.repository == 'LibreSpark/Eyos'
     runs-on: ubuntu-latest
     env:
       TZ: 'Asia/Shanghai'

@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 try {
                     window.history.replaceState(
                         { search: keyword }, 
-                        `搜索: ${keyword} - AresTV`, 
+                        `搜索: ${keyword} - Eyos`, 
                         window.location.href
                     );
                 } catch (e) {
@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 window.history.replaceState(
                     { search: searchQuery }, 
-                    `搜索: ${searchQuery} - AresTV`, 
+                    `搜索: ${searchQuery} - Eyos`, 
                     `/s=${encodeURIComponent(searchQuery)}`
                 );
             } catch (e) {

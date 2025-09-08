@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', function () {
         localStorage.setItem('hasInitializedDefaults', 'true');
     }
 
-    // 设置黄色内容过滤器开关初始状态
+    // 设置成人资源过滤器开关初始状态
     const yellowFilterToggle = document.getElementById('yellowFilterToggle');
     if (yellowFilterToggle) {
         yellowFilterToggle.checked = localStorage.getItem('yellowFilterEnabled') === 'true';
@@ -120,7 +120,7 @@ function addAdultAPI() {
         adultdiv.className = 'grid grid-cols-2 gap-2';
         const adultTitle = document.createElement('div');
         adultTitle.className = 'api-group-title adult';
-        adultTitle.innerHTML = `黄色资源采集站 <span class="adult-warning">
+        adultTitle.innerHTML = `成人资源 <span class="adult-warning">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
@@ -169,7 +169,7 @@ function checkAdultAPIsSelected() {
     const yellowFilterContainer = yellowFilterToggle.closest('div').parentNode;
     const filterDescription = yellowFilterContainer.querySelector('p.filter-description');
 
-    // 如果选择了成人API，禁用黄色内容过滤器
+    // 如果选择了成人API，禁用成人资源过滤器
     if (hasAdultSelected) {
         yellowFilterToggle.checked = false;
         yellowFilterToggle.disabled = true;
@@ -180,7 +180,7 @@ function checkAdultAPIsSelected() {
 
         // 修改描述文字
         if (filterDescription) {
-            filterDescription.innerHTML = '<strong class="text-pink-300">选中黄色资源站时无法启用此过滤</strong>';
+            filterDescription.innerHTML = '<strong class="text-pink-300">选中成人资源站时无法启用此过滤</strong>';
         }
 
         // 移除提示信息（如果存在）
@@ -189,13 +189,13 @@ function checkAdultAPIsSelected() {
             existingTooltip.remove();
         }
     } else {
-        // 启用黄色内容过滤器
+        // 启用成人资源过滤器
         yellowFilterToggle.disabled = false;
         yellowFilterContainer.classList.remove('filter-disabled');
 
         // 恢复原来的描述文字
         if (filterDescription) {
-            filterDescription.innerHTML = '过滤"伦理片"等黄色内容';
+            filterDescription.innerHTML = '过滤"伦理片"等成人资源';
         }
 
         // 移除提示信息
@@ -528,13 +528,13 @@ function setupEventListeners() {
         }
     });
 
-    // 黄色内容过滤开关事件绑定
+    // 成人资源过滤开关事件绑定
     const yellowFilterToggle = document.getElementById('yellowFilterToggle');
     if (yellowFilterToggle) {
         yellowFilterToggle.addEventListener('change', function (e) {
             localStorage.setItem('yellowFilterEnabled', e.target.checked);
 
-            // 控制黄色内容接口的显示状态
+            // 控制成人资源接口的显示状态
             const adultdiv = document.getElementById('adultdiv');
             if (adultdiv) {
                 if (e.target.checked === true) {
@@ -584,11 +584,11 @@ function resetSearchArea() {
     try {
         window.history.pushState(
             {},
-            `AresTV - 免费在线视频搜索与观看平台`,
+            `Eyos - 免费在线视频搜索与观看平台`,
             `/`
         );
         // 更新页面标题
-        document.title = `AresTV - 免费在线视频搜索与观看平台`;
+        document.title = `Eyos - 免费在线视频搜索与观看平台`;
     } catch (e) {
         console.error('更新浏览器历史失败:', e);
     }
@@ -649,7 +649,7 @@ async function search() {
             if (Array.isArray(list) && list.length) allResults.push(...list);
         });
 
-        // 黄色内容过滤（可选）
+        // 成人资源过滤（可选）
         const yellowFilterEnabled = localStorage.getItem('yellowFilterEnabled') === 'true';
         if (yellowFilterEnabled) {
             const banned = [
@@ -708,15 +708,15 @@ async function search() {
         // 有结果：更新 URL 与标题
         try {
             const encodedQuery = encodeURIComponent(query);
-            window.history.pushState({ search: query }, `搜索: ${query} - AresTV`, `/s=${encodedQuery}`);
-            document.title = `搜索: ${query} - AresTV`;
+            window.history.pushState({ search: query }, `搜索: ${query} - Eyos`, `/s=${encodedQuery}`);
+            document.title = `搜索: ${query} - Eyos`;
         } catch (e) {
             console.error('更新浏览器历史失败:', e);
         }
 
         // 使用新版高端卡片渲染
-        if (window.AresTVSearchUI && typeof window.AresTVSearchUI.renderSearchResults === 'function') {
-            window.AresTVSearchUI.renderSearchResults(allResults);
+        if (window.EyosSearchUI && typeof window.EyosSearchUI.renderSearchResults === 'function') {
+            window.EyosSearchUI.renderSearchResults(allResults);
         } else {
             // 兜底：无新UI时，最简渲染标题列表（不建议长期使用）
             const resultsDiv = document.getElementById('results');
@@ -1147,7 +1147,7 @@ async function importConfigFromUrl() {
             }
 
             const config = await response.json();
-            if (config.name !== 'AresTV-Settings') throw '配置文件格式不正确';
+            if (config.name !== 'Eyos-Settings') throw '配置文件格式不正确';
 
             // 验证哈希
             const dataHash = await sha256(JSON.stringify(config.data));
@@ -1199,7 +1199,7 @@ async function importConfig() {
 
             // 解析并验证配置
             const config = JSON.parse(content);
-            if (config.name !== 'AresTV-Settings') throw '配置文件格式不正确';
+            if (config.name !== 'Eyos-Settings') throw '配置文件格式不正确';
 
             // 验证哈希
             const dataHash = await sha256(JSON.stringify(config.data));
@@ -1256,14 +1256,14 @@ async function exportConfig() {
     }
 
     const times = Date.now().toString();
-    config['name'] = 'AresTV-Settings';  // 配置文件名，用于校验
+    config['name'] = 'Eyos-Settings';  // 配置文件名，用于校验
     config['time'] = times;               // 配置文件生成时间
     config['cfgVer'] = '1.0.0';           // 配置文件版本
     config['data'] = items;               // 配置文件数据
     config['hash'] = await sha256(JSON.stringify(config['data']));  // 计算数据的哈希值，用于校验
 
     // 将配置数据保存为 JSON 文件
-    saveStringAsFile(JSON.stringify(config), 'AresTV-Settings_' + times + '.json');
+    saveStringAsFile(JSON.stringify(config), 'Eyos-Settings_' + times + '.json');
 }
 
 // 将字符串保存为文件

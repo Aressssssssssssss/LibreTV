@@ -166,8 +166,8 @@ async function fillAndSearch(title) {
 
     try {
       const encodedQuery = encodeURIComponent(safeTitle);
-      window.history.pushState({ search: safeTitle }, `搜索: ${safeTitle} - AresTV`, `/s=${encodedQuery}`);
-      document.title = `搜索: ${safeTitle} - AresTV`;
+      window.history.pushState({ search: safeTitle }, `搜索: ${safeTitle} - Eyos`, `/s=${encodedQuery}`);
+      document.title = `搜索: ${safeTitle} - Eyos`;
     } catch (e) { console.error('更新历史失败:', e); }
 
     if (window.innerWidth <= 768) {
@@ -203,8 +203,8 @@ async function fillAndSearchWithDouban(title) {
 
     try {
       const encodedQuery = encodeURIComponent(safeTitle);
-      window.history.pushState({ search: safeTitle }, `搜索: ${safeTitle} - AresTV`, `/s=${encodedQuery}`);
-      document.title = `搜索: ${safeTitle} - AresTV`;
+      window.history.pushState({ search: safeTitle }, `搜索: ${safeTitle} - Eyos`, `/s=${encodedQuery}`);
+      document.title = `搜索: ${safeTitle} - Eyos`;
     } catch (e) { console.error('更新历史失败:', e); }
 
     if (window.innerWidth <= 768) {

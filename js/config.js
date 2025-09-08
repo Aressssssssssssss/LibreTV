@@ -13,8 +13,8 @@ const PASSWORD_CONFIG = {
 
 // 网站信息配置
 const SITE_CONFIG = {
-    name: 'AresTV',
-    url: 'https://tv.uoares.com',
+    name: 'Eyos',
+    url: 'https://www.e-yos.com',
     description: '免费在线视频搜索与观看平台',
     // logo: 'image/logo.png',
     version: '1.0.3'
@@ -22,11 +22,6 @@ const SITE_CONFIG = {
 
 // API站点配置
 const API_SITES = {
-    testSource: {
-        api: 'https://www.example.com/api.php/provide/vod',
-        name: '空内容测试源',
-        adult: true
-    },
     laoyaziyuan:{name:"🔞老鸭资源",adult: true,api:"https://api.apilyzy.com/api.php/provide/vod/"},
     yaowuwuziyuan:{name:"🔞155资源",adult: true,api:"https://155api.com/api.php/provide/vod/"},
     didiziyuan:{name:"🔞滴滴资源",adult: true,api:"https://api.ddapi.cc/api.php/provide/vod/"},
@@ -124,5 +119,5 @@ const CUSTOM_API_CONFIG = {
     adultPropName: 'isAdult' // 用于标记成人内容的属性名
 };
 
-// 隐藏内置黄色采集站API的变量
+// 隐藏内置成人资源采集站API的变量
 const HIDE_BUILTIN_ADULT_APIS = false;

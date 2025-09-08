@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AresTV - 免费在线视频搜索与观看平台</title>
-    <meta name="description" content="AresTV是一个免费的在线视频搜索平台，无广告、安全，提供来自多个视频源的内容搜索与观看服务，无需注册即可使用。">
-    <meta name="keywords" content="在线视频,免费视频,视频搜索,电影,电视剧,AresTV">
-    <meta name="author" content="AresTV Team">
+    <title>Eyos - 免费在线视频搜索与观看平台</title>
+    <meta name="description" content="Eyos是一个免费的在线视频搜索平台，无广告、安全，提供来自多个视频源的内容搜索与观看服务，无需注册即可使用。">
+    <meta name="keywords" content="在线视频,免费视频,视频搜索,电影,电视剧,Eyos">
+    <meta name="author" content="Eyos Team">
     <meta name="theme-color" content="#0b0b0f"/>
 
     <!-- Favicon & PWA -->
@@ -357,7 +357,7 @@
                     <input type="text" id="customApiDetail" placeholder="detail地址（可选）" class="w-full bg-[#0f1117] border border-[#2a2d39] text-white px-2 py-2 rounded mb-2">
                     <div class="flex items-center mb-2">
                         <input type="checkbox" id="customApiIsAdult" class="form-checkbox h-4 w-4 text-pink-500 bg-[#0f1117] border border-[#2a2d39]">
-                        <label for="customApiIsAdult" class="ml-2 text-xs text-pink-400">黄色资源站</label>
+                        <label for="customApiIsAdult" class="ml-2 text-xs text-pink-400">成人资源站</label>
                     </div>
                     <div class="flex space-x-2">
                         <button onclick="addCustomApi()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-xs">添加</button>
@@ -370,12 +370,12 @@
             <div class="p-3 glass glass--tight neon-border">
                 <label class="block text-sm font-medium text-gray-300 mb-3 border-b border-[#333] pb-1">功能开关</label>
 
-                <!-- 黄色内容过滤 -->
+                <!-- 成人资源过滤 -->
                 <div class="flex flex-col mb-3 pb-3 border-b border-[#222]">
                     <div class="flex items-center justify-between">
                         <div>
-                            <label class="text-sm font-medium text-gray-300">黄色内容过滤</label>
-                            <p class="text-xs text-gray-500 mt-1">过滤“伦理片”等黄色内容</p>
+                            <label class="text-sm font-medium text-gray-300">成人资源过滤</label>
+                            <p class="text-xs text-gray-500 mt-1">过滤“伦理片”等成人资源</p>
                         </div>
                         <div class="relative inline-block w-12 align-middle select-none">
                             <input type="checkbox" id="yellowFilterToggle" class="opacity-0 absolute w-full h-full cursor-pointer z-10">
@@ -399,11 +399,11 @@
                     </div>
                 </div>
 
-                <!-- 豆瓣热门 -->
+                <!-- 热门 -->
                 <div class="flex items-center justify-between">
                     <div>
-                        <label class="text-sm font-medium text-gray-300">豆瓣热门推荐</label>
-                        <p class="text-xs text-gray-500 mt-1">首页显示豆瓣热门影视内容</p>
+                        <label class="text-sm font-medium text-gray-300">热门推荐</label>
+                        <p class="text-xs text-gray-500 mt-1">首页显示热门影视内容</p>
                     </div>
                     <div class="relative inline-block w-12 align-middle select-none">
                         <input type="checkbox" id="doubanToggle" class="opacity-0 absolute w-full h-full cursor-pointer z-10">
@@ -437,7 +437,7 @@
                             </svg>
                           </span>
                         </span>
-                        <h1 class="text-5xl font-extrabold gradient-text tracking-tight">AresTV</h1>
+                        <h1 class="text-5xl font-extrabold gradient-text tracking-tight">Eyos</h1>
                     </a>
                 </div>
                 <p class="text-gray-400 mb-8">自由观影，畅享精彩</p>
@@ -482,7 +482,6 @@
                     <div class="mb-4">
                         <div class="flex items-center justify-between mb-4">
                             <div class="flex items-center">
-                                <h2 class="text-xl font-bold text-white mr-4">豆瓣热门</h2>
                                 <div class="pill-toggle flex items-center rounded-full p-1">
                                     <button id="douban-movie-toggle" class="active">电影</button>
                                     <button id="douban-tv-toggle">电视剧</button>
@@ -531,9 +530,9 @@
                         <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                         </svg>
-                        <span class="gradient-text font-bold">AresTV</span>
+                        <span class="gradient-text font-bold">Eyos</span>
                     </div>
-                    <p class="text-gray-500 text-sm mt-2 text-center md:text-left">© 2025 AresTV - 自由观影，畅享精彩</p>
+                    <p class="text-gray-500 text-sm mt-2 text-center md:text-left">© 2025 Eyos - 自由观影，畅享精彩</p>
                 </div>
 
                 <div class="text-center md:text-right">
@@ -589,8 +588,8 @@
         <div class="p-8 w-11/12 max-w-2xl max-h-[90vh] overflow-y-auto">
             <h2 class="text-2xl font-bold gradient-text mb-6 text-center">使用声明</h2>
             <div class="text-gray-300 space-y-4">
-                <p>欢迎使用 AresTV。在开始使用前，请您了解并同意以下条款：</p>
-                <p><strong class="text-blue-400">服务性质：</strong> AresTV 仅提供视频搜索服务，不直接提供、存储或上传任何视频内容。所有搜索结果均来自第三方公开接口。</p>
+                <p>欢迎使用 Eyos。在开始使用前，请您了解并同意以下条款：</p>
+                <p><strong class="text-blue-400">服务性质：</strong> Eyos 仅提供视频搜索服务，不直接提供、存储或上传任何视频内容。所有搜索结果均来自第三方公开接口。</p>
                 <p><strong class="text-blue-400">用户责任：</strong> 用户在使用本站服务时，须遵守相关法律法规，不得利用搜索结果从事侵权行为，如下载、传播未经授权的作品等。</p>
                 <p><strong class="text-blue-400">广告风险提示：</strong> 本站所有视频均来自第三方采集站，视频中出现的广告与本站无关，请勿相信或点击视频中的任何广告内容，谨防上当受骗。</p>
             </div>
@@ -618,12 +617,12 @@
     {
         "@context": "https://schema.org",
         "@type": "WebSite",
-        "name": "AresTV",
-        "url": "https://tv.uoares.com/",
+        "name": "Eyos",
+        "url": "https://www.e-yos.com/",
         "description": "免费在线视频搜索与观看平台",
         "potentialAction": {
             "@type": "SearchAction",
-            "target": "https://tv.uoares.com/?s={search_term_string}",
+            "target": "https://www.e-yos.com/?s={search_term_string}",
             "query-input": "required name=search_term_string"
         }
     }

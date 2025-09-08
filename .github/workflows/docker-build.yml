@@ -1,4 +1,4 @@
-name: Build AresTV image
+name: Build Eyos image
 
 on:
   workflow_run:
@@ -9,9 +9,9 @@ on:
 
 jobs:
   build:
-    name: Build AresTV image
+    name: Build Eyos image
     runs-on: ubuntu-latest
-    if: (github.event.workflow_run.conclusion == 'success' && github.repository == 'LibreSpark/AresTV') || (github.repository == 'bestZwei/AresTV')
+    if: (github.event.workflow_run.conclusion == 'success' && github.repository == 'LibreSpark/Eyos') || (github.repository == 'bestZwei/Eyos')
 
     steps:
       - name: Check out repository
@@ -26,12 +26,12 @@ jobs:
       - name: Set Docker image tag based on repository
         id: set-tag
         run: |
-          if [ "${{ github.repository }}" = "LibreSpark/AresTV" ]; then
-            echo "IMAGE_NAME=AresTV" >> $GITHUB_OUTPUT
-            echo "TAGS=${{ secrets.DOCKER_USERNAME }}/AresTV:latest,${{ secrets.DOCKER_USERNAME }}/AresTV:${{ steps.version.outputs.VERSION }}" >> $GITHUB_OUTPUT
+          if [ "${{ github.repository }}" = "LibreSpark/Eyos" ]; then
+            echo "IMAGE_NAME=Eyos" >> $GITHUB_OUTPUT
+            echo "TAGS=${{ secrets.DOCKER_USERNAME }}/Eyos:latest,${{ secrets.DOCKER_USERNAME }}/Eyos:${{ steps.version.outputs.VERSION }}" >> $GITHUB_OUTPUT
           else
-            echo "IMAGE_NAME=AresTV-beta" >> $GITHUB_OUTPUT
-            echo "TAGS=${{ secrets.DOCKER_USERNAME }}/AresTV-beta:latest" >> $GITHUB_OUTPUT
+            echo "IMAGE_NAME=Eyos-beta" >> $GITHUB_OUTPUT
+            echo "TAGS=${{ secrets.DOCKER_USERNAME }}/Eyos-beta:latest" >> $GITHUB_OUTPUT
           fi
 
       - name: Set up Docker QEMU
@@ -46,7 +46,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and push AresTV image
+      - name: Build and push Eyos image
         uses: docker/build-push-action@v6.14.0
         with:
           context: .

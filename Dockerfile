@@ -1,7 +1,7 @@
 FROM node:lts-alpine
 
-LABEL maintainer="AresTV Team"
-LABEL description="AresTV - 免费在线视频搜索与观看平台"
+LABEL maintainer="Eyos Team"
+LABEL description="Eyos - 免费在线视频搜索与观看平台"
 
 # 设置环境变量
 ENV PORT=8080

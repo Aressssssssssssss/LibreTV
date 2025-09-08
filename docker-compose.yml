@@ -1,7 +1,7 @@
 services:
-  AresTV:
-    image: bestzwei/AresTV:latest
-    container_name: AresTV
+  Eyos:
+    image: bestzwei/Eyos:latest
+    container_name: Eyos
     ports:
       - "8899:8080" # 将内部 8080 端口映射到主机的 8899 端口
     environment:
