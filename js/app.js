@@ -61,6 +61,8 @@ document.addEventListener('DOMContentLoaded', function () {
     setTimeout(checkAdultAPIsSelected, 100);
 });
 
+
+
 // 初始化API复选框
 function initAPICheckboxes() {
     const container = document.getElementById('apiCheckboxes');
@@ -653,12 +655,24 @@ async function search() {
         const yellowFilterEnabled = localStorage.getItem('yellowFilterEnabled') === 'true';
         if (yellowFilterEnabled) {
             const banned = [
-                '伦理片','福利','里番动漫','门事件','萝莉少女','制服诱惑','国产传媒','cosplay','黑丝诱惑',
-                '无码','日本无码','有码','日本有码','SWAG','网红主播','色情片','同性片','福利视频','福利片'
+                '伦理片', '福利', '里番动漫', '门事件', '萝莉少女', '制服诱惑', '国产传媒', 'cosplay', '黑丝诱惑',
+                '无码', '日本无码', '有码', '日本有码', 'SWAG', '网红主播', '色情片', '同性片', '福利视频', '福利片'
             ];
             allResults = allResults.filter(item => {
                 const typeName = String(item.type_name || item.norm_type || item.type || '');
                 return !banned.some(k => typeName.includes(k));
+            });
+        }
+
+        // 兜底：按“名称+年份”跨源去重（防止上游个别接口未去重或字段差异）
+        {
+            const seenNY = new Set();
+            allResults = allResults.filter(item => {
+                const k = _nameYearKey(item);
+                if (!k) return true;          // 抓不到 key 的保留（如极少数字段缺失）
+                if (seenNY.has(k)) return false;
+                seenNY.add(k);
+                return true;
             });
         }
 
@@ -722,7 +736,7 @@ async function search() {
             const resultsDiv = document.getElementById('results');
             if (resultsDiv) {
                 resultsDiv.innerHTML = allResults.map(it => {
-                    const t = (it.norm_title || it.vod_name || '未命名').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+                    const t = (it.norm_title || it.vod_name || '未命名').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
                     return `<div class="p-3 border border-[#333] rounded">${t}</div>`;
                 }).join('');
             }
