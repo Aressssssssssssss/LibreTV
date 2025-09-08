@@ -94,6 +94,18 @@ let currentVideoUrl = ''; // 记录当前实际的视频URL
 const isWebkit = (typeof window.webkitConvertPointFromNodeToPage === 'function')
 Artplayer.FULLSCREEN_WEB_IN_BODY = true;
 
+/** ========= 自动换源 Failover ========== */
+const FAILOVER_BASE_WAIT_MS = 15000;            // 初始等待：15s
+const FAILOVER_STATE_KEY    = 'eyos_failover_state';
+
+let failoverTimer = null;       // 定时器
+let failoverOrder = [];         // 候选源顺序（selectedAPIs）
+let failoverMap   = {};         // { sourceKey: { vod_id } }，为该标题匹配到的条目
+let failoverRound = 0;          // 失败轮次（0 表示 15s，1 表示 30s …）
+let failoverNextIdx = 0;        // 下一个要尝试的源下标（在 failoverOrder 中）
+let failoverArmed = false;      // 是否已经布防（避免重复定时器）
+
+
 // 页面加载
 document.addEventListener('DOMContentLoaded', function () {
     // 先检查用户是否已通过密码验证
@@ -224,6 +236,8 @@ function initializePageContent() {
     // 初始化播放器
     if (videoUrl) {
         initPlayer(videoUrl);
+        // 启用自动换源看门狗
+        setupAutoSourceFailover();
     } else {
         showError('无效的视频链接');
     }
@@ -442,7 +456,7 @@ function initPlayer(videoUrl) {
         container: '#player',
         url: videoUrl,
         type: 'm3u8',
-        title: videoTitle,
+        title: currentVideoTitle,
         volume: 0.8,
         isLive: false,
         muted: false,
@@ -499,6 +513,9 @@ function initPlayer(videoUrl) {
                     playbackStarted = true;
                     document.getElementById('player-loading').style.display = 'none';
                     document.getElementById('error').style.display = 'none';
+                    // 播放成功 -> 清除自动换源布防与状态
+                    clearFailoverWatchdog();
+                    clearFailoverState();
                 });
 
                 // 监听视频进度事件
@@ -512,14 +529,11 @@ function initPlayer(videoUrl) {
                 hls.loadSource(url);
                 hls.attachMedia(video);
 
-                // enable airplay, from https://github.com/video-dev/hls.js/issues/5989
-                // 检查是否已存在source元素，如果存在则更新，不存在则创建
+                // enable airplay
                 let sourceElement = video.querySelector('source');
                 if (sourceElement) {
-                    // 更新现有source元素的URL
                     sourceElement.src = videoUrl;
                 } else {
-                    // 创建新的source元素
                     sourceElement = document.createElement('source');
                     sourceElement.src = videoUrl;
                     video.appendChild(sourceElement);
@@ -542,7 +556,6 @@ function initPlayer(videoUrl) {
                         if (playbackStarted) {
                             return;
                         }
-
                         // 如果出现多次bufferAppendError但视频未播放，尝试恢复
                         if (bufferAppendErrorCount >= 3) {
                             hls.recoverMediaError();
@@ -567,6 +580,8 @@ function initPlayer(videoUrl) {
                                 }
                                 break;
                         }
+                        // 关键点：致命加载错误 -> 立刻触发自动换源
+                        triggerImmediateFailover();
                     }
                 });
 
@@ -583,85 +598,58 @@ function initPlayer(videoUrl) {
         }
     });
 
-    // artplayer 没有 'fullscreenWeb:enter', 'fullscreenWeb:exit' 等事件
-    // 所以原控制栏隐藏代码并没有起作用
-    // 实际起作用的是 artplayer 默认行为，它支持自动隐藏工具栏
-    // 但有一个 bug： 在副屏全屏时，鼠标移出副屏后不会自动隐藏工具栏
-    // 下面进一并重构和修复：
+    // 控制栏隐藏相关
     let hideTimer;
-
-    // 隐藏控制栏
     function hideControls() {
         if (art && art.controls) {
             art.controls.show = false;
         }
     }
-
-    // 重置计时器，计时器超时时间与 artplayer 保持一致
     function resetHideTimer() {
         clearTimeout(hideTimer);
         hideTimer = setTimeout(() => {
             hideControls();
         }, Artplayer.CONTROL_HIDE_TIME);
     }
-
-    // 处理鼠标离开浏览器窗口
     function handleMouseOut(e) {
         if (e && !e.relatedTarget) {
             resetHideTimer();
         }
     }
-
-    // 全屏状态切换时注册/移除 mouseout 事件，监听鼠标移出屏幕事件
-    // 从而对播放器状态栏进行隐藏倒计时
     function handleFullScreen(isFullScreen, isWeb) {
         if (isFullScreen) {
             document.addEventListener('mouseout', handleMouseOut);
         } else {
             document.removeEventListener('mouseout', handleMouseOut);
-            // 退出全屏时清理计时器
             clearTimeout(hideTimer);
         }
-
         if (!isWeb) {
             if (window.screen.orientation && window.screen.orientation.lock) {
-                window.screen.orientation.lock('landscape')
-                    .then(() => {
-                    })
-                    .catch((error) => {
-                    });
+                window.screen.orientation.lock('landscape').catch(() => {});
             }
         }
     }
 
-    // 播放器加载完成后初始隐藏工具栏
     art.on('ready', () => {
         hideControls();
     });
-
-    // 全屏 Web 模式处理
     art.on('fullscreenWeb', function (isFullScreen) {
         handleFullScreen(isFullScreen, true);
     });
-
-    // 全屏模式处理
     art.on('fullscreen', function (isFullScreen) {
         handleFullScreen(isFullScreen, false);
     });
 
     art.on('video:loadedmetadata', function() {
         document.getElementById('player-loading').style.display = 'none';
-        videoHasEnded = false; // 视频加载时重置结束标志
-        // 优先使用URL传递的position参数
+        videoHasEnded = false;
         const urlParams = new URLSearchParams(window.location.search);
         const savedPosition = parseInt(urlParams.get('position') || '0');
 
         if (savedPosition > 10 && savedPosition < art.duration - 2) {
-            // 如果URL中有有效的播放位置参数，直接使用它
             art.currentTime = savedPosition;
             showPositionRestoreHint(savedPosition);
         } else {
-            // 否则尝试从本地存储恢复播放进度
             try {
                 const progressKey = 'videoProgress_' + getVideoId();
                 const progressStr = localStorage.getItem(progressKey);
@@ -677,34 +665,31 @@ function initPlayer(videoUrl) {
                         showPositionRestoreHint(progress.position);
                     }
                 }
-            } catch (e) {
-            }
+            } catch (e) {}
         }
 
-        // 设置进度条点击监听
         setupProgressBarPreciseClicks();
-
-        // 视频加载成功后，在稍微延迟后将其添加到观看历史
         setTimeout(saveToHistory, 3000);
-
-        // 启动定期保存播放进度
         startProgressSaveInterval();
     })
 
-    // 错误处理
+    // 错误处理（新增：未开始播放时，直接触发自动换源）
     art.on('video:error', function (error) {
         // 如果正在切换视频，忽略错误
-        if (window.isSwitchingVideo) {
-            return;
+        if (window.isSwitchingVideo) return;
+
+        const loadingElements = document.querySelectorAll('#player-loading, .player-loading-container');
+        loadingElements.forEach(el => { if (el) el.style.display = 'none'; });
+
+        const started = art && art.video && art.video.currentTime > 0;
+        if (!started) {
+            // 还没真正开始播放 -> 视为“加载失败”，走自动换源
+            triggerImmediateFailover();
+            return; // 不再向用户展示错误卡片，避免闪烁
         }
 
-        // 隐藏所有加载指示器
-        const loadingElements = document.querySelectorAll('#player-loading, .player-loading-container');
-        loadingElements.forEach(el => {
-            if (el) el.style.display = 'none';
-        });
-
-        showError('视频播放失败: ' + (error.message || '未知错误'));
+        // 已经开始过播放，按原逻辑提示错误
+        showError('视频播放失败: ' + (error && error.message ? error.message : '未知错误'));
     });
 
     // 添加移动端长按三倍速播放功能
@@ -713,16 +698,12 @@ function initPlayer(videoUrl) {
     // 视频播放结束事件
     art.on('video:ended', function () {
         videoHasEnded = true;
-
         clearVideoProgress();
 
-        // 如果自动播放下一集开启，且确实有下一集
         if (autoplayEnabled && currentEpisodeIndex < currentEpisodes.length - 1) {
-            // 稍长延迟以确保所有事件处理完成
             setTimeout(() => {
-                // 确认不是因为用户拖拽导致的假结束事件
                 playNextEpisode();
-                videoHasEnded = false; // 重置标志
+                videoHasEnded = false;
             }, 1000);
         } else {
             art.fullscreen = false;
@@ -731,7 +712,6 @@ function initPlayer(videoUrl) {
 
     // 添加双击全屏支持
     art.on('video:playing', () => {
-        // 绑定双击事件到视频容器
         if (art.video) {
             art.video.addEventListener('dblclick', () => {
                 art.fullscreen = !art.fullscreen;
@@ -740,13 +720,9 @@ function initPlayer(videoUrl) {
         }
     });
 
-    // 10秒后如果仍在加载，但不立即显示错误
+    // 10秒后的温和提示（非错误）
     setTimeout(function () {
-        // 如果视频已经播放开始，则不显示错误
-        if (art && art.video && art.video.currentTime > 0) {
-            return;
-        }
-
+        if (art && art.video && art.video.currentTime > 0) return;
         const loadingElement = document.getElementById('player-loading');
         if (loadingElement && loadingElement.style.display !== 'none') {
             loadingElement.innerHTML = `
@@ -757,6 +733,7 @@ function initPlayer(videoUrl) {
         }
     }, 10000);
 }
+
 
 // 自定义M3U8 Loader用于过滤广告
 class CustomHlsJsLoader extends Hls.DefaultConfig.loader {
@@ -886,6 +863,11 @@ function renderEpisodes() {
 
 // 播放指定集数
 function playEpisode(index) {
+    // 用户主动操作 -> 重置自动换源等待与定时器
+    clearFailoverWatchdog();
+    failoverRound = 0;
+    saveFailoverState(); // 记录重置
+
     // 确保index在有效范围内
     if (index < 0 || index >= currentEpisodes.length) {
         return;
@@ -1712,64 +1694,92 @@ async function showSwitchResourceModal() {
 }
 
 // 切换资源的函数
-async function switchToResource(sourceKey, vodId) {
-    // 关闭模态框
-    document.getElementById('modal').classList.add('hidden');
-    
-    showLoading();
+// 切换资源的函数
+async function switchToResource(sourceKey, vodId, opts = {}) {
+    const isAuto = !!opts.auto;
+
+    // 自动换源时不弹 loading/toast；手动换源保留原有体验
+    if (!isAuto) {
+        const modal = document.getElementById('modal');
+        if (modal) modal.classList.add('hidden');
+        showLoading();
+    }
+
     try {
         // 构建API参数
         let apiParams = '';
-        
-        // 处理自定义API源
         if (sourceKey.startsWith('custom_')) {
             const customIndex = sourceKey.replace('custom_', '');
             const customApi = getCustomApiInfo(customIndex);
             if (!customApi) {
-                showToast('自定义API配置无效', 'error');
-                hideLoading();
+                if (isAuto) {
+                    // 自动模式：继续尝试下一个源
+                    setTimeout(onFailoverTimeout, 0);
+                } else {
+                    showToast('自定义API配置无效', 'error');
+                }
                 return;
             }
-            // 传递 detail 字段
             if (customApi.detail) {
                 apiParams = '&customApi=' + encodeURIComponent(customApi.url) + '&customDetail=' + encodeURIComponent(customApi.detail) + '&source=custom';
             } else {
                 apiParams = '&customApi=' + encodeURIComponent(customApi.url) + '&source=custom';
             }
         } else {
-            // 内置API
             apiParams = '&source=' + sourceKey;
         }
-        
-        // Add a timestamp to prevent caching
+
         const timestamp = new Date().getTime();
         const cacheBuster = `&_t=${timestamp}`;
-        const response = await fetch(`/api/detail?id=${encodeURIComponent(vodId)}${apiParams}${cacheBuster}`);
-        
-        const data = await response.json();
-        
+        const detailUrl = `/api/detail?id=${encodeURIComponent(vodId)}${apiParams}${cacheBuster}`;
+
+        const response = await fetch(detailUrl);
+        if (!response.ok) {
+            // 视为加载失败
+            if (isAuto) {
+                setTimeout(onFailoverTimeout, 0);
+            } else {
+                showToast('获取资源详情失败', 'error');
+            }
+            return;
+        }
+
+        let data;
+        try {
+            data = await response.json();
+        } catch (e) {
+            if (isAuto) {
+                setTimeout(onFailoverTimeout, 0);
+            } else {
+                showToast('解析资源详情失败', 'error');
+            }
+            return;
+        }
+
         if (!data.episodes || data.episodes.length === 0) {
-            showToast('未找到播放资源', 'error');
-            hideLoading();
+            if (isAuto) {
+                // 自动模式下：没有可用播放源 -> 继续下一个候选
+                setTimeout(onFailoverTimeout, 0);
+            } else {
+                showToast('未找到播放资源', 'error');
+            }
             return;
         }
 
         // 获取当前播放的集数索引
         const currentIndex = currentEpisodeIndex;
-        
-        // 确定要播放的集数索引
+
+        // 确定要播放的集数索引（尽量保持同一集）
         let targetIndex = 0;
         if (currentIndex < data.episodes.length) {
-            // 如果当前集数在新资源中存在，则使用相同集数
             targetIndex = currentIndex;
         }
-        
-        // 获取目标集数的URL
+
         const targetUrl = data.episodes[targetIndex];
-        
+
         // 构建播放页面URL
         const watchUrl = `player.html?id=${vodId}&source=${sourceKey}&url=${encodeURIComponent(targetUrl)}&index=${targetIndex}&title=${encodeURIComponent(currentVideoTitle)}`;
-        
+
         // 保存当前状态到localStorage
         try {
             localStorage.setItem('currentVideoTitle', data.vod_name || '未知视频');
@@ -1781,13 +1791,167 @@ async function switchToResource(sourceKey, vodId) {
             console.error('保存播放状态失败:', e);
         }
 
-        // 跳转到播放页面
+        // 跳转到播放页面（页面初始化会重新布防/继续尝试）
         window.location.href = watchUrl;
-        
+
     } catch (error) {
         console.error('切换资源失败:', error);
-        showToast('切换资源失败，请稍后重试', 'error');
+        if (isAuto) {
+            // 自动模式：立即推进到下一个候选
+            setTimeout(onFailoverTimeout, 0);
+        } else {
+            showToast('切换资源失败，请稍后重试', 'error');
+        }
     } finally {
-        hideLoading();
+        if (!isAuto) hideLoading();
     }
 }
+
+
+function loadFailoverState() {
+    try {
+        const raw = sessionStorage.getItem(FAILOVER_STATE_KEY);
+        return raw ? JSON.parse(raw) : null;
+    } catch (_) { return null; }
+}
+function saveFailoverState() {
+    try {
+        sessionStorage.setItem(FAILOVER_STATE_KEY, JSON.stringify({
+            title: currentVideoTitle,
+            order: failoverOrder,
+            map:   failoverMap,
+            round: failoverRound,
+            nextIdx: failoverNextIdx,
+            ts: Date.now(),
+        }));
+    } catch (_) {}
+}
+function clearFailoverState() {
+    try { sessionStorage.removeItem(FAILOVER_STATE_KEY); } catch (_) {}
+}
+
+function clearFailoverWatchdog() {
+    if (failoverTimer) clearTimeout(failoverTimer);
+    failoverTimer = null;
+    failoverArmed = false;
+}
+
+// 预拉取每个源里与“当前标题”最匹配的 vod_id，供后续一键切换
+async function ensureFailoverCandidates(title) {
+    const tasks = failoverOrder.map(async key => {
+        if (failoverMap[key]) return; // 已有
+        try {
+            const list = await searchByAPIAndKeyWord(key, title);
+            if (!Array.isArray(list) || list.length === 0) return;
+            const exact = list.find(x => x.vod_name === title) || list[0];
+            if (exact && exact.vod_id) {
+                failoverMap[key] = { vod_id: exact.vod_id };
+            }
+        } catch (_) {}
+    });
+    await Promise.allSettled(tasks);
+    saveFailoverState();
+}
+
+function startFailoverWatchdog(waitMs) {
+    // 已经在播放就不再布防
+    if (art && art.video && !art.video.paused && art.video.currentTime > 0) return;
+
+    clearFailoverWatchdog();
+    failoverArmed = true;
+    failoverTimer = setTimeout(() => {
+        // 异步执行真正的超时处理
+        onFailoverTimeout();
+    }, waitMs);
+}
+
+// 立即触发一次超时处理（比如遇到致命错误时）
+function triggerImmediateFailover() {
+    if (!failoverArmed) return;
+    clearFailoverWatchdog();
+    onFailoverTimeout();
+}
+
+async function onFailoverTimeout() {
+    // 若此刻已经开始播放，就终止
+    if (art && art.video && art.video.currentTime > 0 && !art.video.paused) {
+        clearFailoverState();
+        return;
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentSource = urlParams.get('source') || '';
+    const currentVodId  = urlParams.get('id') || '';
+    const total = failoverOrder.length;
+
+    // 确保有候选列表
+    if (!total) return;
+
+    // 确保已准备出各源的 vod_id
+    await ensureFailoverCandidates(currentVideoTitle);
+
+    // 找到下一个可用候选（跳过当前源或未匹配到 vod_id 的源）
+    let tried = 0, chosen = null;
+    while (tried < total) {
+        const key = failoverOrder[failoverNextIdx];
+        failoverNextIdx = (failoverNextIdx + 1) % total;
+        const info = failoverMap[key];
+
+        if (info && info.vod_id && !(key === currentSource && info.vod_id === currentVodId)) {
+            chosen = { key, vod_id: info.vod_id };
+            break;
+        }
+        tried++;
+    }
+
+    if (!chosen) {
+        // 本轮都试过了/都不可用：进入下一轮，等待翻倍
+        failoverRound += 1;
+        saveFailoverState();
+        startFailoverWatchdog(FAILOVER_BASE_WAIT_MS * Math.pow(2, failoverRound));
+        return;
+    }
+
+    // 记住状态（页面将跳转）
+    saveFailoverState();
+
+    // 静默换源（仍沿用你现有的换源逻辑）
+    try {
+        await switchToResource(chosen.key, chosen.vod_id, { auto: true });
+        // switchToResource 会跳转页面；新页面会在 initialize 时重新布防
+    } catch (_) {
+        // 如果切换失败，继续下一位或下一轮
+        startFailoverWatchdog(FAILOVER_BASE_WAIT_MS * Math.pow(2, failoverRound));
+    }
+}
+
+// 在页面初始化后调用，完成首轮布防
+function setupAutoSourceFailover() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentSource = urlParams.get('source') || '';
+    const saved = loadFailoverState();
+
+    // 基于 selectedAPIs 构建顺序
+    failoverOrder = Array.isArray(selectedAPIs) ? [...selectedAPIs] : [];
+
+    // 找到当前源在顺序里的位置，下一次从它的“下一个”开始
+    const pos = failoverOrder.indexOf(currentSource);
+    failoverNextIdx = pos >= 0 ? (pos + 1) % (failoverOrder.length || 1) : 0;
+
+    // 从 session 恢复轮次/候选
+    if (saved && saved.title === currentVideoTitle) {
+        failoverMap   = saved.map   || {};
+        failoverRound = saved.round || 0;
+        // nextIdx 以当前 URL 为准重新计算，因此不强制覆盖
+    } else {
+        failoverMap = {};
+        failoverRound = 0;
+    }
+
+    // 背景准备候选（不阻塞首轮定时器）
+    ensureFailoverCandidates(currentVideoTitle);
+
+    // 首次布防
+    startFailoverWatchdog(FAILOVER_BASE_WAIT_MS * Math.max(1, Math.pow(2, failoverRound)));
+}
+
