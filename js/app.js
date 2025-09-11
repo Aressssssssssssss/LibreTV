@@ -104,7 +104,7 @@ function initAPICheckboxes() {
     container.appendChild(normaldiv);
 
     // 添加成人API列表
-    addAdultAPI();
+    // addAdultAPI();
 
     // 初始检查成人内容状态
     checkAdultAPIsSelected();
